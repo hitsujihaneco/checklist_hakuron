@@ -1,0 +1,1054 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="color-scheme" content="light">
+<title>ランド　パークマップ</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@500;700;900&family=Zen+Kaku+Gothic+New:wght@400;500;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#2c2416;
+    --paper:#fffaf0;
+    --paper-warm:#fbf0d8;
+    --gold:#e8b23d;
+    --raspberry:#d1495b;
+    --muted:#6f6247;        /* 本文に対する副次テキスト（コントラスト確保済み） */
+    --line: rgba(44,36,22,0.13);
+    --edge: rgba(44,36,22,0.20);
+  }
+
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background: linear-gradient(180deg,#fdf4dd 0%, #f7e9c4 100%);
+    background-attachment:fixed;
+    color:var(--ink);
+    font-family:'Zen Kaku Gothic New', sans-serif;
+    min-height:100vh;
+    padding:28px 16px 80px;
+    -webkit-text-size-adjust:100%;
+    overflow-x:hidden;
+  }
+
+  .wrap{max-width:780px;margin:0 auto;}
+
+  /* ---------- header ---------- */
+  .site-header{text-align:center;margin-bottom:18px;}
+  .eyebrow{
+    font-family:'JetBrains Mono', monospace;
+    letter-spacing:.18em;
+    font-size:11px;
+    color:var(--raspberry);
+    text-transform:uppercase;
+    margin-bottom:10px;
+  }
+  .gate-logo{
+    width:100%;
+    max-width:400px;
+    margin:0 auto 10px;
+  }
+  .gate-logo svg{width:100%;height:auto;display:block;overflow:visible;}
+  h1{
+    /* .gate-logo が視覚表現。スクリーンリーダー用に保持 */
+    position:absolute;
+    width:1px;height:1px;
+    overflow:hidden;
+    clip:rect(0,0,0,0);
+    clip-path:inset(50%);
+    white-space:nowrap;
+  }
+  .sub{font-size:13px;color:var(--muted);line-height:1.6;}
+
+  /* ---------- park map ---------- */
+  .park-stage{
+    position:relative;
+    width:100%;
+    max-width:740px;
+    margin:0 auto;
+    border-radius:20px;
+    overflow:hidden;
+    border:3px solid var(--ink);
+    box-shadow: 0 6px 0 rgba(44,36,22,.15);
+    background:#bcd98a;
+  }
+  .park-stage svg{width:100%;height:auto;display:block;}
+
+  /* ---------- stats ---------- */
+  .stat-row{
+    display:flex;justify-content:center;gap:10px;flex-wrap:wrap;
+    margin:16px 0 0;
+  }
+  .stat-chip{
+    display:inline-flex;align-items:baseline;gap:8px;
+    font-family:'JetBrains Mono', monospace;
+    font-size:12px;
+    background:var(--paper);
+    border:1px solid var(--edge);
+    color:var(--muted);
+    padding:6px 13px;
+    border-radius:999px;
+  }
+  .stat-chip b{color:var(--raspberry);font-weight:700;font-size:13px;}
+
+  .progress-outer{
+    width:100%;max-width:420px;margin:16px auto 0;height:12px;
+    background:var(--paper);
+    border-radius:999px;overflow:hidden;
+    border:1px solid var(--edge);
+  }
+  .progress-inner{
+    height:100%;
+    background:linear-gradient(90deg, var(--raspberry), var(--gold), #4a7ba6);
+    background-size:420px 100%;
+    width:0%;
+    transition:width .5s cubic-bezier(.4,1.4,.4,1);
+    border-radius:999px;
+  }
+
+  .banner{
+    text-align:center;
+    font-family:'Zen Maru Gothic', sans-serif;
+    font-size:13px;line-height:1.7;
+    color:var(--ink);
+    background:rgba(209,73,91,0.08);
+    border:1px dashed rgba(232,178,61,0.85);
+    border-radius:12px;
+    padding:11px 16px;
+    margin:18px auto 0;
+    max-width:560px;
+    text-wrap:balance;
+  }
+
+  /* ---------- accordion list ---------- */
+  .strata{margin-top:24px;display:flex;flex-direction:column;gap:10px;}
+
+  .layer{
+    border-radius:14px;
+    overflow:hidden;
+    border:1px solid var(--edge);
+    background:var(--paper);
+    box-shadow:0 1px 0 rgba(44,36,22,.05);
+  }
+
+  .layer-head{
+    display:flex;align-items:center;gap:12px;width:100%;
+    padding:14px 16px;cursor:pointer;user-select:none;
+    background:none;border:0;margin:0;text-align:left;
+    font:inherit;color:inherit;
+  }
+  .layer-head:hover{background:rgba(232,178,61,.08);}
+  .land-icon{
+    width:34px;height:34px;flex-shrink:0;border-radius:10px;
+    display:flex;align-items:center;justify-content:center;
+    border:2px solid var(--ink);
+  }
+  .land-icon svg{width:20px;height:20px;}
+  .layer-tag{
+    font-family:'JetBrains Mono', monospace;
+    font-size:10.5px;color:var(--muted);letter-spacing:.02em;
+  }
+  .layer-titles{flex:1;min-width:0;display:block;}
+  .layer-titles > span{display:block;}
+  .layer-title{
+    font-family:'Zen Maru Gothic', sans-serif;
+    font-weight:700;font-size:15px;color:var(--ink);line-height:1.4;
+  }
+  .layer-subtitle{font-size:11.5px;color:var(--muted);margin-top:2px;line-height:1.5;}
+  .layer-count{
+    font-family:'JetBrains Mono', monospace;
+    font-size:12px;color:var(--raspberry);flex-shrink:0;
+    font-variant-numeric:tabular-nums;
+  }
+  .layer.done .layer-count{color:#4a7a3a;}
+  .layer-chevron{flex-shrink:0;width:16px;height:16px;transition:transform .25s;color:var(--muted);}
+  .layer.open .layer-chevron{transform:rotate(90deg);}
+
+  .layer-mini-progress{height:4px;background:rgba(44,36,22,.10);}
+  .layer-mini-progress-fill{height:100%;width:0;transition:width .4s ease;}
+
+  .layer-body{
+    max-height:0;overflow:hidden;
+    transition:max-height .35s ease;
+    background:var(--paper-warm);
+  }
+
+  .item{
+    display:flex;align-items:flex-start;gap:11px;width:100%;
+    padding:11px 16px;border-top:1px solid var(--line);
+    cursor:pointer;user-select:none;
+    background:none;border-left:0;border-right:0;border-bottom:0;
+    font:inherit;color:inherit;text-align:left;
+  }
+  .item:hover{background:#f5e6bf;}
+
+  .stamp{
+    flex-shrink:0;width:22px;height:22px;border-radius:50%;
+    border:2px solid var(--ink);margin-top:1px;
+    display:flex;align-items:center;justify-content:center;
+    transition:background-color .2s, transform .2s;background:transparent;
+  }
+  .item.done .stamp{background:var(--gold);transform:scale(1.06);}
+  .stamp svg{width:12px;height:12px;opacity:0;transition:opacity .15s;stroke:var(--ink);}
+  .item.done .stamp svg{opacity:1;}
+
+  .item-text{font-size:13.5px;line-height:1.6;color:var(--ink);}
+  .item.done .item-text{color:#8b7d5f;text-decoration:line-through;text-decoration-color:rgba(44,36,22,.35);}
+  .priority-badge{
+    display:inline-block;font-family:'JetBrains Mono', monospace;font-size:9.5px;
+    background:var(--raspberry);color:#fff;padding:2px 6px;border-radius:4px;
+    margin-right:7px;font-weight:700;line-height:1.3;
+    position:relative;top:-1px;
+  }
+  .item.done .priority-badge{background:#b09a72;}
+
+  footer{text-align:center;margin-top:28px;}
+  .reset-btn{
+    font-family:'JetBrains Mono', monospace;font-size:11px;color:var(--muted);
+    background:none;border:1px solid rgba(44,36,22,.25);border-radius:999px;
+    padding:7px 15px;cursor:pointer;transition:color .15s,border-color .15s;
+  }
+  .reset-btn:hover{color:var(--ink);border-color:var(--ink);}
+
+  /* キーボード操作時のフォーカス表示 */
+  .layer-head:focus-visible,
+  .item:focus-visible,
+  .reset-btn:focus-visible{
+    outline:2px solid var(--raspberry);
+    outline-offset:-3px;
+    border-radius:6px;
+  }
+
+  /* ライブラリが使えないときの紙吹雪（CSSのみ） */
+  .confetti-piece{
+    position:fixed;top:-10px;width:8px;height:8px;border-radius:2px;
+    pointer-events:none;z-index:999;animation: fall linear forwards;
+  }
+  @keyframes fall{ to{ transform: translateY(110vh) rotate(540deg); opacity:0.2; } }
+
+  /* fireworks-js の描画先。全画面に重ねるが操作は邪魔しない */
+  .fx-fireworks{
+    position:fixed;inset:0;pointer-events:none;z-index:998;
+  }
+
+  @media (max-width:560px){
+    body{padding:20px 12px 60px;}
+    .park-stage{border-width:2px;border-radius:16px;}
+    .layer-head{padding:12px 13px;gap:10px;}
+    .land-icon{width:30px;height:30px;}
+    .land-icon svg{width:18px;height:18px;}
+    .layer-title{font-size:14px;}
+    .item{padding:11px 13px;}
+    .item-text{font-size:13px;}
+    .stat-row{gap:7px;}
+    .stat-chip{padding:5px 11px;font-size:11px;}
+  }
+
+  @media (prefers-reduced-motion: reduce){
+    *{animation-duration:.001ms !important;transition-duration:.001ms !important;}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="site-header">
+    <div class="eyebrow">DISSERTATION LAND · PARK MAP</div>
+    <h1>ランド　パークマップ</h1>
+    <div class="gate-logo">
+      <svg viewBox="0 0 460 210" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="ランド パークマップ">
+        <defs>
+          <!-- アーチ帯の中心線 -->
+          <path id="archBand" d="M50,130 A233.09,233.09 0 0 1 410,130" />
+          <!-- 文字用（帯の中心より約10px下＝ベースライン） -->
+          <path id="archText" d="M50,130 A253.50,253.50 0 0 1 410,130" />
+        </defs>
+
+        <!-- pillars -->
+        <rect x="36" y="118" width="18" height="82" rx="2" fill="#f6ead8" stroke="#2c2416" stroke-width="2.5"/>
+        <rect x="406" y="118" width="18" height="82" rx="2" fill="#f6ead8" stroke="#2c2416" stroke-width="2.5"/>
+        <polygon points="30,118 60,118 45,100" fill="#d1495b" stroke="#2c2416" stroke-width="2" stroke-linejoin="round"/>
+        <polygon points="400,118 430,118 415,100" fill="#4a7ba6" stroke="#2c2416" stroke-width="2" stroke-linejoin="round"/>
+
+        <!-- arch band -->
+        <use href="#archBand" fill="none" stroke="#2c2416" stroke-width="32" stroke-linecap="round"/>
+        <use href="#archBand" fill="none" stroke="#e8b23d" stroke-width="28" stroke-linecap="round"/>
+
+        <!-- light bulbs along the arch -->
+        <g fill="#fff3c9" stroke="#2c2416" stroke-width="1.2">
+          <circle cx="62.1" cy="87.4" r="4.2"/>
+          <circle cx="94.7" cy="63.0" r="4.2"/><circle cx="130.8" cy="44.2" r="4.2"/>
+          <circle cx="169.4" cy="31.3" r="4.2"/><circle cx="209.6" cy="24.8" r="4.2"/>
+          <circle cx="250.4" cy="24.8" r="4.2"/><circle cx="290.6" cy="31.3" r="4.2"/>
+          <circle cx="329.2" cy="44.2" r="4.2"/><circle cx="365.3" cy="63.0" r="4.2"/>
+          <circle cx="397.9" cy="87.4" r="4.2"/>
+        </g>
+
+        <!-- pennant on top -->
+        <line x1="230" y1="26" x2="230" y2="6" stroke="#2c2416" stroke-width="2.2" stroke-linecap="round"/>
+        <polygon points="230,6 249,12.5 230,19" fill="#d1495b" stroke="#2c2416" stroke-width="1.4" stroke-linejoin="round"/>
+
+        <!-- wordmark following the arch -->
+        <text font-family="'Zen Maru Gothic', sans-serif" font-weight="900" font-size="30" fill="#fffaf0" stroke="#2c2416" stroke-width="1.8" paint-order="stroke" letter-spacing="2">
+          <textPath href="#archText" startOffset="50%" text-anchor="middle">ランド</textPath>
+        </text>
+
+        <!-- sub banner -->
+        <rect x="145" y="156" width="170" height="28" rx="14" fill="#fffaf0" stroke="#2c2416" stroke-width="2"/>
+        <text x="230" y="175" text-anchor="middle" font-family="'JetBrains Mono', monospace" font-size="11" fill="#2c2416" letter-spacing="1.5">PARK MAP</text>
+      </svg>
+    </div>
+    <div class="sub">各エリアを完成させて、パーク全体をグランドオープンへ</div>
+  </div>
+
+  <div class="park-stage" id="parkStage"></div>
+
+  <div class="stat-row">
+    <div class="stat-chip"><span>開園準備</span><b id="statPercent">0%</b></div>
+    <div class="stat-chip"><span>来園者数</span><b id="statPop">0人</b></div>
+    <div class="stat-chip"><span>完成エリア</span><b id="statCount">0 / 7</b></div>
+  </div>
+
+  <div class="progress-outer" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" id="progressOuter">
+    <div class="progress-inner" id="progressInner"></div>
+  </div>
+
+  <div class="banner" id="banner" aria-live="polite"></div>
+
+  <div class="strata" id="strata"></div>
+
+  <footer>
+    <button class="reset-btn" id="resetBtn">パークをリセット</button>
+  </footer>
+</div>
+
+<!-- 演出用ライブラリ。CDNに繋がらない環境では読み込みに失敗するが、
+     読み込み失敗は例外にはならず、演出はCSSだけの紙吹雪に自動で切り替わる。
+     （有無の判定は読み込み完了を待たず、演出を出す瞬間に行う） -->
+<script async src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js"></script>
+<script async src="https://cdn.jsdelivr.net/npm/fireworks-js@2.10.8/dist/index.umd.js"></script>
+
+<script>
+const ICONS = {
+  totem: `<svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="#2c2416" stroke-width="1.8" stroke-linejoin="round"><path d="M9 21V3h6v18"/><circle cx="12" cy="7" r="2"/><path d="M9 13h6M9 17h6"/></svg>`,
+  fountain: `<svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="#2c2416" stroke-width="1.8" stroke-linecap="round"><path d="M12 3v6M7 6c0 3 2 3 5 3s5 0 5-3M4 21h16M6 21c0-4 2-6 6-6s6 2 6 6"/></svg>`,
+  tower: `<svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="#2c2416" stroke-width="1.8" stroke-linejoin="round"><circle cx="12" cy="5" r="2.4"/><path d="M12 7v14M7 21h10M9 13l-3 8M15 13l3 8"/></svg>`,
+  saloon: `<svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="#2c2416" stroke-width="1.8" stroke-linejoin="round"><path d="M3 10l9-6 9 6"/><rect x="5" y="10" width="14" height="10"/><path d="M9 20v-6h6v6"/></svg>`,
+  castle: `<svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="#2c2416" stroke-width="1.8" stroke-linejoin="round"><path d="M4 21V11l2-2v-3l2 2 2-3 2 3 2-2v3l2 2v10z"/><path d="M4 21h16"/></svg>`,
+  candy: `<svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="#2c2416" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v4M9 21h6l-1-8H10z"/><path d="M6 7h12l-1 6H7z"/></svg>`,
+  gift: `<svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="#2c2416" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="9" width="18" height="11"/><path d="M3 9l9-5 9 5"/><path d="M12 9v11"/></svg>`,
+};
+
+const SECTIONS = [
+  {
+    id:'A', tag:'エリア01', land:'ジャングル・トレイル', icon:'totem', color:'#5b7a4a', dark:'#3f5834',
+    title:'第1章の再構成', subtitle:'導入エピソードの反映と相互参照の付け替え',
+    items:[
+      '新しい章構成（1.1〜1.5）を確定し、目次から旧1.5「本論文の構成」を削除する',
+      '1.1節「ふたつのはにわ」の本文をGoogle Docsに反映する',
+      '引用元（東博・近美・美術手帖等）を参考文献リストに追加する',
+      '1.1節末の一文が1.2節へ違和感なくつながるか確認する',
+      '本文中の旧1.1〜1.4節番号を新1.2〜1.5節番号に機械的に置換する',
+      '2章2.1節（新2.3節）冒頭の「第1章1.4.3節」参照を「1.5.3節」に修正（2箇所）',
+      '4章4.1節の「第1章1.4.3節」参照を「1.5.3節」に修正',
+      '6章6.1節の「第1章1.4.3節」参照を「1.5.3節」に修正',
+      '8章8.3.3節の「第1章1.3節」参照を「1.4節」に修正',
+    ]
+  },
+  {
+    id:'B', tag:'エリア02', land:'中央広場', icon:'fountain', color:'#d9a441', dark:'#a97a24',
+    title:'RQの二段構えを明示', subtitle:'1章の問題提起と2章末の正式なRQの関係を橋渡し',
+    items:[
+      '新1.2節末尾に「正式なRQは2.4節で定式化される」旨の一文を追加する',
+      '2章2.4節冒頭に「1.2節の問題意識を踏まえ」の一文を追加する',
+    ]
+  },
+  {
+    id:'C', tag:'エリア03', land:'みらいゾーン', icon:'tower', color:'#4a7ba6', dark:'#2f597e',
+    title:'全体構成の移設と図の追加', subtitle:'3章末に3.9節を新設し、図を2点追加',
+    items:[
+      '旧1.5の内容を書き換えて3.9節「本論文の構成」として新設する',
+      '3.8「小括」との重複感を避ける橋渡し文を3.9冒頭に追加する',
+      '3.3節に三層構造（基本情報・コンテンツ・文脈）の模式図を追加する',
+      '3.5節にコンテンツ→文脈レイヤーを再構築する概念図を追加する',
+    ]
+  },
+  {
+    id:'D', tag:'エリア04', land:'開拓の里', icon:'saloon', color:'#a3603c', dark:'#7a4529',
+    title:'ANT言及の削除', subtitle:'ラトゥールへの言及を2箇所退治し、文献リストも整理',
+    items:[
+      '2章2.4節のANT言及3文を削除し「三つ→二つの視点」に修正する',
+      '8章8.3.4節のANT言及3文を削除する',
+      '参考文献リストからLatour（2005）を削除する',
+    ]
+  },
+  {
+    id:'E', tag:'エリア05・中央', land:'おとぎ城', icon:'castle', color:'#e8b23d', dark:'#c18e22',
+    title:'理論補強・審査対策', subtitle:'パークの心臓部。審査委員に突っ込まれそうな箇所への手当て（★は最優先）',
+    items:[
+      {t:'8章8.3.1節に「意図」表現と認識論的立場の整合性を説明する一文を挿入する', p:true},
+      {t:'6章6.3.2節にGower距離・等重み設定の理論的根拠を挿入する', p:true},
+      '（余裕があれば）重み付けを変えたクラスタリングで頑健性チェックを追加実行する',
+      '2章2.4節末尾に差異的価値論（ソシュール）による比較手法の根拠づけを挿入する',
+      '3章3.5.2節にバルト『モードの体系』との方法論的対応を挿入する',
+      '5章5.3.1節冒頭にタイトルの帰属不明性・データ妥当性の説明を挿入する',
+      '6章6.2.1節にタグの扱いについて同趣旨の一文を挿入する',
+      '6章6.5.4節「残された課題」にタグ付与主体の異質性を追加する',
+      '6章6.5.4節、命題2の末尾に正典化指標の限界を一文追加する',
+      '8章8.3.1節のブリオー関連パラグラフを、対立しないという言い切りから慎重な言い回しに書き換える',
+    ]
+  },
+  {
+    id:'F', tag:'エリア06', land:'おもちゃ通り', icon:'candy', color:'#c15a8a', dark:'#963d66',
+    title:'章タイトルの再検討', subtitle:'第4〜7章タイトルを展開ベースに',
+    items:[
+      '第4章タイトルを「三層フレームワークの適用——展覧会情報の分解と比較」に変更する',
+      '第5〜7章タイトルを展開ベースの案から最終確定する',
+    ]
+  },
+  {
+    id:'G', tag:'エリア07', land:'フィナーレ・ギフト通り', icon:'gift', color:'#8a5a8a', dark:'#603c60',
+    title:'文献リスト統合・体裁', subtitle:'すべての章立てが固まってから最後にまとめて処理（フィナーレ）',
+    items:[
+      '表紙（タイトル・氏名）を追加する',
+      '文献リストを巻末に統合し、A→Z順・著者名+年表記に統一。本文の[xx]番号を削除する',
+      '【要確認】文献（Tibbo 2012、Lynch 2011、Zaagsma 2023、ヴェントゥーリ2023、安井2025、Gerdts 1995）の書誌情報を確認する',
+      '新規文献（はにわ展・ハニワと土偶の近代 関連の出典）を文献リストに追加する',
+    ]
+  },
+];
+
+let flat = [];
+SECTIONS.forEach(sec=>{
+  sec.norm = sec.items.map((it,i)=>{
+    const obj = (typeof it === 'string') ? {t:it,p:false} : it;
+    const id = sec.id+'-'+i;
+    flat.push(id);
+    return {id, text:obj.t, priority:!!obj.p};
+  });
+});
+const TOTAL = flat.length;
+
+const STORE_KEY = 'themepark-map-checklist-state';
+let state = {};
+
+/* window.storage（ホスト提供）を優先し、無ければ localStorage にフォールバック */
+async function loadState(){
+  try{
+    if(window.storage && window.storage.get){
+      const res = await window.storage.get(STORE_KEY, false);
+      if(res && res.value){ state = JSON.parse(res.value); return; }
+    }
+  }catch(e){ /* fall through */ }
+  try{
+    const raw = localStorage.getItem(STORE_KEY);
+    if(raw) state = JSON.parse(raw);
+  }catch(e){ state = {}; }
+}
+async function saveState(){
+  const json = JSON.stringify(state);
+  try{ localStorage.setItem(STORE_KEY, json); }catch(e){ /* best effort */ }
+  try{
+    if(window.storage && window.storage.set){ await window.storage.set(STORE_KEY, json, false); }
+  }catch(e){ /* best effort */ }
+}
+
+function countDone(){ return flat.filter(id=>state[id]).length; }
+
+/* 実際の建設状況から文面を組み立てる。
+   全体の進捗率だけで判断すると、おとぎ城の工事段階と食い違う文面になるため、
+   「開園したエリア数」と「おとぎ城自身の進捗」をそれぞれ見て書き分ける。
+   おとぎ城の分岐は castleLand() の描画段階と同じ閾値に合わせてある。 */
+function bannerText(ctx){
+  const {done, started, completed, sections, castleP} = ctx;
+
+  if(done === 0) return 'まだ更地です。地面に区画の線を引いたところ。さあ、どのエリアから始めましょう。';
+  if(completed === sections) return 'ランド、全エリア完成。ゲートを開けて、花火を打ち上げましょう。おつかれさまでした。';
+
+  const head = completed === 0
+    ? (started === 1
+        ? '最初の区画にクレーンが立ちました。'
+        : started + 'つの区画で工事が進んでいます。')
+    : '旗が上がったエリアが' + completed + 'つ。残りは' + (sections - completed) + 'エリアです。';
+
+  const castle =
+    castleP >= 1    ? 'おとぎ城はもう明かりを灯して、開園の日を待っています。' :
+    castleP >= 0.85 ? 'おとぎ城の窓に明かりが灯りました。あとは旗を上げるだけです。' :
+    castleP >= 0.7  ? 'おとぎ城に屋根がかかりました。' :
+    castleP >= 0.5  ? 'おとぎ城の中央の塔が、高く伸びてきました。' :
+    castleP >= 0.3  ? 'おとぎ城の左右の塔が立ち上がりました。' :
+    castleP >= 0.15 ? 'おとぎ城の広間の壁が積み上がってきました。' :
+    castleP > 0     ? 'おとぎ城も基礎の工事に入りました。' :
+                      'パークの真ん中、おとぎ城の区画はまだ手つかずです。';
+
+  return head + castle;
+}
+
+/* ============ パークマップ（viewBox 640 x 400） ============ */
+
+/* 各エリアのランドマーク建築。原点は建物の足元（地面の中心）。
+   完成形を最初から見せず、チェックが進むほど部材が増えて形が現れる。
+   t(閾値, 部材) … 進捗率がその閾値に達したら描画される。
+   0.001=基礎 → 0.2=躯体 → 0.4=屋根/頭部 → 0.6=付属 → 0.7=開口部/表情 → 1=装飾 */
+function lighten(hex, amt){
+  const n = parseInt(hex.slice(1),16);
+  const mix = v => Math.round(v + (255-v)*amt);
+  return '#'+[mix((n>>16)&255), mix((n>>8)&255), mix(n&255)]
+    .map(v=>v.toString(16).padStart(2,'0')).join('');
+}
+
+/* 未着工の区画に立つ「建設予定」の看板 */
+const PLAN_SIGN = `
+  <g opacity=".6">
+    <line x1="-7" y1="0" x2="-7" y2="-13" stroke="#2c2416" stroke-width="2"/>
+    <line x1="7" y1="0" x2="7" y2="-13" stroke="#2c2416" stroke-width="2"/>
+    <rect x="-17" y="-27" width="34" height="15" rx="2" fill="#ece6d4" stroke="#2c2416" stroke-width="1.8"/>
+    <path d="M-12,-22 h24 M-12,-17.5 h16" fill="none" stroke="#2c2416" stroke-width="1.4" opacity=".55"/>
+  </g>`;
+
+/* 工事中だけ現れるクレーン。完成すると撤去される */
+const CRANE = `
+  <g fill="none" stroke="#2c2416" stroke-width="2" opacity=".5">
+    <line x1="-50" y1="0" x2="-50" y2="-52"/>
+    <line x1="-57" y1="-46" x2="-33" y2="-46"/>
+    <line x1="-50" y1="-52" x2="-36" y2="-46"/>
+    <line x1="-50" y1="-52" x2="-55" y2="-46"/>
+    <line x1="-38" y1="-46" x2="-38" y2="-36"/>
+  </g>
+  <rect x="-42" y="-36" width="8" height="6" fill="#ded8c6" stroke="#2c2416" stroke-width="1.4" opacity=".65"/>`;
+
+function buildingSVG(sec, p){
+  const wall  = '#f6ead8';
+  /* 屋根は区画と同色だと沈むので、明るめに振ってコントラストを稼ぐ */
+  const roof  = lighten(sec.color, 0.34);
+  const trim  = sec.dark;
+  const lit   = '#ffd37a';
+  const water = '#bfe0f0';
+  const on    = p >= 1;
+  const t = (min, markup) => (p >= min ? markup : '');
+
+  const PARTS = {
+    /* ジャングル・トレイル：床 → 小屋 → 茅葺き → 灯り → トーテムポール → ヤシ */
+    A: ()=>`
+      ${t(0.001,`<rect x="-26" y="-5" width="41" height="5" rx="1.5" fill="${trim}" stroke="#2c2416" stroke-width="1.6"/>`)}
+      ${t(0.2,`<rect x="-22" y="-24" width="34" height="19" fill="${wall}" stroke="#2c2416" stroke-width="2"/>`)}
+      ${t(0.4,`<polygon points="-29,-23 -5,-43 19,-23" fill="${roof}" stroke="#2c2416" stroke-width="2"/>
+        <polygon points="-24,-29 -5,-41 14,-29" fill="${trim}" opacity=".45"/>`)}
+      ${t(0.6,`<rect x="-17" y="-19" width="11" height="14" fill="${lit}" stroke="#2c2416" stroke-width="1.4"/>
+        <rect x="0" y="-20" width="9" height="8" fill="${lit}" stroke="#2c2416" stroke-width="1.4"/>`)}
+      ${t(0.7,`<rect x="20" y="-40" width="14" height="40" rx="2" fill="${wall}" stroke="#2c2416" stroke-width="2"/>
+        <polygon points="16,-40 27,-51 38,-40" fill="${roof}" stroke="#2c2416" stroke-width="1.8"/>
+        <polygon points="14,-27 20,-30 20,-23" fill="${trim}" stroke="#2c2416" stroke-width="1.2"/>
+        <polygon points="40,-27 34,-30 34,-23" fill="${trim}" stroke="#2c2416" stroke-width="1.2"/>
+        <circle cx="27" cy="-33" r="3.4" fill="${lit}" stroke="#2c2416" stroke-width="1.2"/>
+        <path d="M20,-19 h14 M20,-10 h14" fill="none" stroke="#2c2416" stroke-width="1.3"/>`)}
+      ${t(1,`<path d="M-30,0 C-29,-13 -27,-21 -25,-29" fill="none" stroke="#2c2416" stroke-width="2.4"/>
+        <path d="M-25,-29 C-34,-35 -40,-32 -41,-27" fill="${roof}" stroke="#2c2416" stroke-width="1.6"/>
+        <path d="M-25,-29 C-20,-39 -12,-40 -8,-36" fill="${roof}" stroke="#2c2416" stroke-width="1.6"/>
+        <path d="M-25,-29 C-32,-41 -26,-45 -20,-44" fill="${trim}" stroke="#2c2416" stroke-width="1.6"/>`)}`,
+
+    /* 中央広場：縁石 → 水盤 → 二段目 → 頂部 → 街灯 → 通水 */
+    B: ()=>`
+      ${t(0.001,`<ellipse cx="0" cy="-3" rx="28" ry="9" fill="${trim}" stroke="#2c2416" stroke-width="2"/>`)}
+      ${t(0.2,`<ellipse cx="0" cy="-5" rx="23" ry="6.5" fill="${water}" stroke="#2c2416" stroke-width="1.3"/>`)}
+      ${t(0.4,`<rect x="-4" y="-22" width="8" height="17" fill="${wall}" stroke="#2c2416" stroke-width="1.8"/>
+        <ellipse cx="0" cy="-23" rx="13" ry="4.6" fill="${wall}" stroke="#2c2416" stroke-width="1.8"/>
+        <ellipse cx="0" cy="-25" rx="9.5" ry="3" fill="${water}" stroke="#2c2416" stroke-width="1.1"/>`)}
+      ${t(0.6,`<rect x="-2.6" y="-35" width="5.2" height="11" fill="${wall}" stroke="#2c2416" stroke-width="1.6"/>
+        <circle cx="0" cy="-38" r="4.6" fill="${roof}" stroke="#2c2416" stroke-width="1.8"/>`)}
+      ${t(0.7,`<line x1="-34" y1="0" x2="-34" y2="-23" stroke="#2c2416" stroke-width="2.2"/>
+        <circle cx="-34" cy="-27" r="4.6" fill="${lit}" stroke="#2c2416" stroke-width="1.6"/>
+        <line x1="34" y1="0" x2="34" y2="-23" stroke="#2c2416" stroke-width="2.2"/>
+        <circle cx="34" cy="-27" r="4.6" fill="${lit}" stroke="#2c2416" stroke-width="1.6"/>`)}
+      ${t(1,`<g fill="none" stroke="#bfe4f5" stroke-width="2.4" opacity=".95">
+        <path d="M0,-41 C-9,-45 -15,-37 -17,-27"/><path d="M0,-41 C9,-45 15,-37 17,-27"/>
+        <path d="M0,-42 C-3,-49 3,-49 0,-42"/></g>`)}`,
+
+    /* みらいゾーン：基壇 → 灯り → シャフト → 展望リング → 球体 → アンテナ点灯 */
+    C: ()=>`
+      ${t(0.001,`<polygon points="-27,0 -16,-14 16,-14 27,0" fill="${wall}" stroke="#2c2416" stroke-width="2"/>`)}
+      ${t(0.2,`<rect x="-20" y="-9" width="10" height="9" fill="${lit}" stroke="#2c2416" stroke-width="1.3"/>
+        <rect x="10" y="-9" width="10" height="9" fill="${lit}" stroke="#2c2416" stroke-width="1.3"/>`)}
+      ${t(0.4,`<rect x="-9" y="-46" width="18" height="32" fill="${wall}" stroke="#2c2416" stroke-width="2"/>
+        <path d="M-9,-38 h18 M-9,-30 h18 M-9,-22 h18" fill="none" stroke="#2c2416" stroke-width="1.1" opacity=".4"/>`)}
+      ${t(0.6,`<ellipse cx="0" cy="-48" rx="26" ry="7" fill="${trim}" stroke="#2c2416" stroke-width="1.8"/>`)}
+      ${t(0.7,`<circle cx="0" cy="-54" r="14" fill="${roof}" stroke="#2c2416" stroke-width="2"/>
+        <path d="M-13.6,-56 a13.6,13.6 0 0 1 27.2,0 z" fill="${lit}" opacity=".85"/>
+        <path d="M-13.6,-56 a13.6,13.6 0 0 1 27.2,0" fill="none" stroke="#2c2416" stroke-width="1.2"/>`)}
+      ${t(1,`<line x1="0" y1="-68" x2="0" y2="-77" stroke="#2c2416" stroke-width="2"/>
+        <circle cx="0" cy="-79" r="3.4" fill="#ff6b6b" stroke="#2c2416" stroke-width="1.2"/>
+        <circle cx="0" cy="-79" r="8" fill="none" stroke="#ff6b6b" stroke-width="1.4" opacity=".5"/>`)}`,
+
+    /* 開拓の里：土台 → 躯体 → 偽ファサード → 開口部 → ポーチ → 看板と樽 */
+    D: ()=>`
+      ${t(0.001,`<rect x="-30" y="-5" width="60" height="5" rx="1.5" fill="${trim}" stroke="#2c2416" stroke-width="1.6"/>`)}
+      ${t(0.2,`<rect x="-26" y="-34" width="52" height="29" fill="${wall}" stroke="#2c2416" stroke-width="2"/>`)}
+      ${t(0.4,`<polygon points="-30,-34 -30,-44 -20,-50 20,-50 30,-44 30,-34" fill="${roof}" stroke="#2c2416" stroke-width="2"/>`)}
+      ${t(0.6,`<rect x="-24" y="-31" width="12" height="9" fill="${lit}" stroke="#2c2416" stroke-width="1.4"/>
+        <rect x="12" y="-31" width="12" height="9" fill="${lit}" stroke="#2c2416" stroke-width="1.4"/>
+        <rect x="-8" y="-21" width="16" height="16" fill="${lit}" stroke="#2c2416" stroke-width="1.5"/>
+        <line x1="0" y1="-21" x2="0" y2="-5" stroke="#2c2416" stroke-width="1.3"/>`)}
+      ${t(0.7,`<rect x="-34" y="-22" width="68" height="5" rx="2.5" fill="${trim}" stroke="#2c2416" stroke-width="1.8"/>
+        <line x1="-30" y1="-17" x2="-30" y2="-5" stroke="#2c2416" stroke-width="2.2"/>
+        <line x1="30" y1="-17" x2="30" y2="-5" stroke="#2c2416" stroke-width="2.2"/>`)}
+      ${t(1,`<rect x="-15" y="-47" width="30" height="9" rx="2" fill="${wall}" stroke="#2c2416" stroke-width="1.6"/>
+        <path d="M-10,-42.5 h20" fill="none" stroke="${trim}" stroke-width="2.2"/>
+        <rect x="-46" y="-13" width="12" height="13" rx="2" fill="${trim}" stroke="#2c2416" stroke-width="1.6"/>
+        <path d="M-46,-9 h12 M-46,-4.5 h12" fill="none" stroke="#2c2416" stroke-width="1.1"/>`)}`,
+
+    /* おもちゃ通り：ゼンマイ仕掛けのブリキのロボット。
+       脚 → 胴体 → 頭 → 腕 → 顔とゼンマイと入口 → アンテナ点灯・ガムボール・キャンディ */
+    F: ()=>`
+      ${t(0.001,`<rect x="-28" y="-8" width="13" height="8" rx="2.5" fill="${trim}" stroke="#2c2416" stroke-width="1.8"/>
+        <rect x="-7" y="-8" width="13" height="8" rx="2.5" fill="${trim}" stroke="#2c2416" stroke-width="1.8"/>`)}
+      ${t(0.2,`<rect x="-30" y="-40" width="44" height="32" rx="7" fill="${wall}" stroke="#2c2416" stroke-width="2"/>`)}
+      ${t(0.4,`<rect x="-12" y="-46" width="8" height="6" fill="${trim}" stroke="#2c2416" stroke-width="1.6"/>
+        <rect x="-24" y="-62" width="32" height="16" rx="5" fill="${roof}" stroke="#2c2416" stroke-width="2"/>`)}
+      ${t(0.6,`<rect x="-37" y="-37" width="7" height="17" rx="3.5" fill="${trim}" stroke="#2c2416" stroke-width="1.8"/>
+        <rect x="14" y="-37" width="7" height="17" rx="3.5" fill="${trim}" stroke="#2c2416" stroke-width="1.8"/>
+        <circle cx="-33.5" cy="-17.5" r="4.5" fill="${wall}" stroke="#2c2416" stroke-width="1.6"/>
+        <circle cx="17.5" cy="-17.5" r="4.5" fill="${wall}" stroke="#2c2416" stroke-width="1.6"/>
+        <circle cx="-24" cy="-54" r="3" fill="${wall}" stroke="#2c2416" stroke-width="1.4"/>
+        <circle cx="8" cy="-54" r="3" fill="${wall}" stroke="#2c2416" stroke-width="1.4"/>`)}
+      ${t(0.7,`<circle cx="-15" cy="-56" r="3.4" fill="${lit}" stroke="#2c2416" stroke-width="1.2"/>
+        <circle cx="-1" cy="-56" r="3.4" fill="${lit}" stroke="#2c2416" stroke-width="1.2"/>
+        <rect x="-14" y="-51.5" width="12" height="4.5" rx="1.5" fill="#2c2416" opacity=".78"/>
+        <path d="M-10.5,-51.5 v4.5 M-7,-51.5 v4.5" stroke="${roof}" stroke-width="1" opacity=".8"/>
+        <circle cx="-21" cy="-33" r="3.5" fill="${lit}" stroke="#2c2416" stroke-width="1.2"/>
+        <circle cx="5" cy="-33" r="3.5" fill="${roof}" stroke="#2c2416" stroke-width="1.2"/>
+        <circle cx="-8" cy="-33" r="6.5" fill="${wall}" stroke="#2c2416" stroke-width="1.6"/>
+        <path d="M-8,-38.5 v11 M-13.5,-33 h11" fill="none" stroke="#2c2416" stroke-width="1.7"/>
+        <rect x="-15" y="-24" width="14" height="16" rx="1.5" fill="${lit}" stroke="#2c2416" stroke-width="1.5"/>`)}
+      ${t(1,`<line x1="-8" y1="-62" x2="-8" y2="-71" stroke="#2c2416" stroke-width="2"/>
+        <circle cx="-8" cy="-73" r="3.4" fill="#ff6b6b" stroke="#2c2416" stroke-width="1.2"/>
+        <circle cx="-8" cy="-73" r="7.5" fill="none" stroke="#ff6b6b" stroke-width="1.4" opacity=".5"/>
+        <rect x="24" y="-9" width="15" height="9" rx="2" fill="${trim}" stroke="#2c2416" stroke-width="1.6"/>
+        <rect x="28.5" y="-13" width="6" height="4.5" fill="${trim}" stroke="#2c2416" stroke-width="1.4"/>
+        <circle cx="31.5" cy="-21" r="8.5" fill="${wall}" stroke="#2c2416" stroke-width="1.8"/>
+        <g stroke="none" opacity=".95">
+          <circle cx="28" cy="-18" r="2.4" fill="${sec.color}"/><circle cx="34.5" cy="-19" r="2.4" fill="#e8b23d"/>
+          <circle cx="31" cy="-24" r="2.4" fill="#4a7ba6"/><circle cx="35.6" cy="-24.5" r="2" fill="#d1495b"/>
+          <circle cx="27.4" cy="-23.5" r="2" fill="#5b7a4a"/></g>
+        <circle cx="31.5" cy="-31" r="3" fill="${roof}" stroke="#2c2416" stroke-width="1.4"/>
+        <path d="M-52,0 v-20 a5.5,5.5 0 0 1 11,0 v2" fill="none" stroke="#2c2416" stroke-width="7.6"/>
+        <path d="M-52,0 v-20 a5.5,5.5 0 0 1 11,0 v2" fill="none" stroke="${wall}" stroke-width="5.6"/>
+        <path d="M-52,0 v-20 a5.5,5.5 0 0 1 11,0 v2" fill="none" stroke="${roof}" stroke-width="5.6" stroke-linecap="butt" stroke-dasharray="3.5 5.5"/>`)}`,
+
+    /* フィナーレ・ギフト通り：土台 → 躯体 → 屋根 → 日除け → 開口部 → 贈り物と風船 */
+    G: ()=>`
+      ${t(0.001,`<rect x="-30" y="-5" width="56" height="5" rx="1.5" fill="${trim}" stroke="#2c2416" stroke-width="1.6"/>`)}
+      ${t(0.2,`<rect x="-26" y="-26" width="44" height="21" fill="${wall}" stroke="#2c2416" stroke-width="2"/>`)}
+      ${t(0.4,`<polygon points="-30,-26 -4,-41 22,-26" fill="${roof}" stroke="#2c2416" stroke-width="2"/>`)}
+      ${t(0.6,`<path d="M-28,-21 h48 l-4,7 h-40 z" fill="${trim}" stroke="#2c2416" stroke-width="1.7"/>`)}
+      ${t(0.7,`<rect x="-20" y="-18" width="12" height="13" fill="${lit}" stroke="#2c2416" stroke-width="1.4"/>
+        <rect x="-2" y="-18" width="14" height="9" fill="${lit}" stroke="#2c2416" stroke-width="1.4"/>`)}
+      ${t(1,`<rect x="21" y="-14" width="16" height="14" rx="2" fill="${roof}" stroke="#2c2416" stroke-width="1.8"/>
+        <path d="M29,-14 v14 M21,-7 h16" fill="none" stroke="${trim}" stroke-width="2"/>
+        <path d="M25,-18 a4,4 0 0 1 4,4 a4,4 0 0 1 4,-4" fill="none" stroke="#2c2416" stroke-width="1.5"/>
+        <path d="M-20,-26 C-22,-33 -20,-38 -19,-40" fill="none" stroke="#2c2416" stroke-width="1"/>
+        <path d="M-30,-24 C-33,-31 -32,-37 -31,-39" fill="none" stroke="#2c2416" stroke-width="1"/>
+        <ellipse cx="-19" cy="-46" rx="6" ry="7" fill="#d1495b" stroke="#2c2416" stroke-width="1.3"/>
+        <ellipse cx="-31" cy="-45" rx="5.5" ry="6.5" fill="#e8b23d" stroke="#2c2416" stroke-width="1.3"/>`)}`,
+  };
+
+  const draw = PARTS[sec.id];
+  if(!draw) return '';
+  return `
+    <g stroke-linejoin="round" stroke-linecap="round">
+      ${p<=0 ? PLAN_SIGN : `<ellipse cx="0" cy="1" rx="${(15+p*24).toFixed(1)}" ry="${(4+p*3).toFixed(1)}" fill="#2c2416" opacity=".10"/>`}
+      ${draw()}
+      ${p>0 && p<1 ? CRANE : ''}
+    </g>`;
+}
+
+/* 各エリア：更地の区画だけが常に見え、進捗に応じて建物が組み上がっていく */
+function landSVG(sec, cx, cy, rx, ry){
+  const n = sec.norm.length;
+  const done = sec.norm.filter(it=>state[it.id]).length;
+  const p = n ? done/n : 0;
+  const flagUp = p >= 1;
+
+  return `
+    <g>
+      <ellipse cx="${cx}" cy="${cy}" rx="${rx}" ry="${ry}" fill="#ded8c6" stroke="#2c2416" stroke-width="2.2" stroke-dasharray="${p>=1?'0':'5 5'}"/>
+      <ellipse cx="${cx}" cy="${cy}" rx="${rx}" ry="${ry}" fill="${sec.color}" opacity="${(0.16+p*0.74).toFixed(3)}" stroke="${sec.dark}" stroke-width="${p>=1?2.5:0}"/>
+      <g transform="translate(${cx},${cy+ry*0.35})">${buildingSVG(sec, p)}</g>
+      ${flagUp ? `
+        <line x1="${cx+rx*0.6}" y1="${cy-ry*0.62}" x2="${cx+rx*0.6}" y2="${cy-ry*0.62-19}" stroke="#2c2416" stroke-width="1.8"/>
+        <polygon points="${cx+rx*0.6},${cy-ry*0.62-19} ${cx+rx*0.6+12},${cy-ry*0.62-14} ${cx+rx*0.6},${cy-ry*0.62-9}" fill="${sec.dark}" stroke="#2c2416" stroke-width="1"/>
+      `:''}
+      <text x="${cx}" y="${cy+ry+17}" text-anchor="middle" font-family="'Zen Maru Gothic', sans-serif"
+            font-weight="700" font-size="14" fill="#2c2416"
+            stroke="#eef6dd" stroke-width="3.5" paint-order="stroke" stroke-linejoin="round">${sec.land}</text>
+    </g>
+  `;
+}
+
+function castleLand(sec, cx, cy){
+  const n = sec.norm.length;
+  const done = sec.norm.filter(it=>state[it.id]).length;
+  const p = n ? done/n : 0;
+  const t = (min, markup) => (p >= min ? markup : '');
+  const wall = '#f6ead8';
+  const lit  = '#ffd37a';
+  const S = 'stroke="#2c2416" stroke-width="2.3" stroke-linejoin="round"';
+
+  /* パークの主役なので、他エリアより刻みを細かく（7段階）して積み上がっていく */
+  return `
+  <g transform="translate(${cx-55},${cy-95}) scale(1.05)">
+    <ellipse cx="55" cy="128" rx="90" ry="20" fill="${sec.color}" opacity="${(0.15+p*0.5).toFixed(3)}"/>
+    ${p<=0 ? `<g transform="translate(55,126)">${PLAN_SIGN}</g>` : ''}
+    ${t(0.001,`<rect x="8" y="118" width="94" height="8" rx="2" fill="#c9a86a" ${S}/>`)}
+    ${t(0.15,`<rect x="15" y="82" width="80" height="44" fill="${wall}" ${S}/>`)}
+    ${t(0.3,`<rect x="-14" y="66" width="24" height="60" fill="${wall}" ${S}/>
+      <rect x="100" y="66" width="24" height="60" fill="${wall}" ${S}/>`)}
+    ${t(0.5,`<rect x="40" y="30" width="30" height="56" fill="${wall}" ${S}/>`)}
+    ${t(0.7,`<polygon points="-14,66 -2,46 10,66" fill="#d1495b" ${S}/>
+      <polygon points="100,66 112,46 124,66" fill="#4a7ba6" ${S}/>
+      <polygon points="40,30 55,4 70,30" fill="#e8b23d" ${S}/>`)}
+    ${t(0.85,`<rect x="47" y="50" width="16" height="16" rx="8" fill="${lit}" stroke="#2c2416" stroke-width="1.4"/>
+      <rect x="0" y="88" width="9" height="10" fill="${lit}" stroke="#2c2416" stroke-width="1.2"/>
+      <rect x="106" y="88" width="9" height="10" fill="${lit}" stroke="#2c2416" stroke-width="1.2"/>
+      <path d="M45 126 v-16 a10 10 0 0 1 20 0 v16 z" fill="#2c2416" opacity=".8"/>`)}
+    ${t(1,`<line x1="55" y1="4" x2="55" y2="-12" stroke="#2c2416" stroke-width="1.8"/>
+      <polygon points="55,-12 69,-7 55,-2" fill="#d1495b" stroke="#2c2416" stroke-width="1.2"/>
+      <g fill="#ffd964" stroke="#2c2416" stroke-width="1" paint-order="stroke">
+        <text x="-62" y="14" font-size="22">✦</text><text x="138" y="4" font-size="18">✦</text>
+        <text x="156" y="36" font-size="15">✦</text></g>`)}
+    ${p>0 && p<1 ? `<g fill="none" stroke="#2c2416" stroke-width="2" opacity=".5">
+      <line x1="-34" y1="126" x2="-34" y2="50"/><line x1="-44" y1="56" x2="-16" y2="56"/>
+      <line x1="-34" y1="50" x2="-19" y2="56"/><line x1="-34" y1="50" x2="-41" y2="56"/>
+      <line x1="-20" y1="56" x2="-20" y2="70"/></g>
+      <rect x="-25" y="70" width="10" height="7" fill="#ded8c6" stroke="#2c2416" stroke-width="1.4" opacity=".65"/>`:''}
+    <text x="55" y="152" text-anchor="middle" font-family="'Zen Maru Gothic', sans-serif"
+          font-weight="700" font-size="14" fill="#2c2416"
+          stroke="#eef6dd" stroke-width="3.5" paint-order="stroke" stroke-linejoin="round">${sec.land}</text>
+  </g>`;
+}
+
+/* 中央のおとぎ城を囲む配置。ラベルが viewBox 内に収まり、
+   かつ城と重ならないように余白を取ってある */
+const POSITIONS = {
+  G:[320, 52, 76, 30],
+  D:[108, 96, 70, 40],
+  F:[532, 96, 70, 40],
+  A:[108, 258, 70, 40],
+  C:[532, 258, 70, 40],
+  B:[320, 336, 78, 32],
+};
+const CASTLE = [320, 218];
+
+function parkSVG(){
+  let lands = '';
+  SECTIONS.forEach(sec=>{
+    if(sec.id==='E') return;
+    const [cx,cy,rx,ry] = POSITIONS[sec.id];
+    lands += landSVG(sec, cx, cy, rx, ry);
+  });
+  const eSec = SECTIONS.find(s=>s.id==='E');
+
+  const roads = Object.keys(POSITIONS)
+    .map(k=>`<path d="M${CASTLE[0]},${CASTLE[1]} L${POSITIONS[k][0]},${POSITIONS[k][1]}"/>`)
+    .join('');
+
+  return `
+  <svg viewBox="0 0 640 400" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="パークマップ">
+    <defs>
+      <radialGradient id="parkBg" cx="50%" cy="48%" r="72%">
+        <stop offset="0%" stop-color="#dcefb6"/>
+        <stop offset="100%" stop-color="#bcd98a"/>
+      </radialGradient>
+    </defs>
+    <rect width="640" height="400" fill="url(#parkBg)"/>
+
+    <!-- 中央ハブから各エリアへの園路 -->
+    <g stroke="#f3e9c9" stroke-width="14" fill="none" stroke-linecap="round" opacity=".9">${roads}</g>
+    <g stroke="#2c2416" stroke-width="1" fill="none" opacity=".15" stroke-dasharray="3 7">${roads}</g>
+
+    ${lands}
+    ${castleLand(eSec, CASTLE[0], CASTLE[1])}
+  </svg>`;
+}
+
+/* ============ DOM ============ */
+const els = {
+  statPercent: document.getElementById('statPercent'),
+  statPop: document.getElementById('statPop'),
+  statCount: document.getElementById('statCount'),
+  progressOuter: document.getElementById('progressOuter'),
+  progressInner: document.getElementById('progressInner'),
+  banner: document.getElementById('banner'),
+  parkStage: document.getElementById('parkStage'),
+  strata: document.getElementById('strata'),
+};
+
+let prevPct = -1;
+let prevCompleted = -1;
+const layerRefs = {};   // sec.id -> {layer, body, count, fill, rows:{id:el}}
+
+/* リストは一度だけ組み立て、以降は差分更新する
+   （毎回作り直すとアコーディオンのアニメーションが効かず、画面もちらつくため） */
+function buildStrata(){
+  els.strata.innerHTML = '';
+  SECTIONS.forEach((sec, idx)=>{
+    const layer = document.createElement('div');
+    layer.className = 'layer';
+
+    const bodyId = 'body-'+sec.id;
+    const head = document.createElement('button');
+    head.type = 'button';
+    head.className = 'layer-head';
+    head.setAttribute('aria-expanded','false');
+    head.setAttribute('aria-controls', bodyId);
+    head.innerHTML = `
+      <span class="land-icon" style="background:${sec.color}33">${ICONS[sec.icon]}</span>
+      <span class="layer-titles">
+        <span class="layer-tag">${sec.tag}　${sec.land}</span>
+        <span class="layer-title">${sec.title}</span>
+        <span class="layer-subtitle">${sec.subtitle}</span>
+      </span>
+      <span class="layer-count">0/${sec.norm.length}</span>
+      <svg class="layer-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>
+    `;
+
+    const miniProg = document.createElement('div');
+    miniProg.className = 'layer-mini-progress';
+    miniProg.innerHTML = `<div class="layer-mini-progress-fill" style="background:${sec.color}"></div>`;
+
+    const body = document.createElement('div');
+    body.className = 'layer-body';
+    body.id = bodyId;
+
+    const rows = {};
+    sec.norm.forEach(it=>{
+      const row = document.createElement('button');
+      row.type = 'button';
+      row.className = 'item';
+      row.setAttribute('role','checkbox');
+      row.setAttribute('aria-checked','false');
+      row.innerHTML = `
+        <span class="stamp" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 13l4 4L19 7"/></svg></span>
+        <span class="item-text">${it.priority?'<span class="priority-badge">★最優先</span>':''}${it.text}</span>
+      `;
+      row.addEventListener('click', ()=>toggleItem(sec, it.id));
+      rows[it.id] = row;
+      body.appendChild(row);
+    });
+
+    head.addEventListener('click', ()=>setOpen(sec.id, !layer.classList.contains('open')));
+
+    layer.appendChild(head);
+    layer.appendChild(miniProg);
+    layer.appendChild(body);
+    els.strata.appendChild(layer);
+
+    layerRefs[sec.id] = {
+      layer, head, body, rows,
+      count: head.querySelector('.layer-count'),
+      fill: miniProg.querySelector('.layer-mini-progress-fill'),
+    };
+  });
+}
+
+function setOpen(secId, open){
+  const ref = layerRefs[secId];
+  ref.layer.classList.toggle('open', open);
+  ref.head.setAttribute('aria-expanded', String(open));
+  ref.body.style.maxHeight = open ? ref.body.scrollHeight + 'px' : '0px';
+}
+
+function refreshOpenHeights(){
+  Object.values(layerRefs).forEach(ref=>{
+    if(ref.layer.classList.contains('open')) ref.body.style.maxHeight = ref.body.scrollHeight + 'px';
+  });
+}
+window.addEventListener('resize', refreshOpenHeights);
+
+function toggleItem(sec, id){
+  const wasComplete = sec.norm.every(it=>state[it.id]);
+  state[id] = !state[id];
+  saveState();
+  updateSection(sec);
+
+  const justCompleted = !wasComplete && sec.norm.every(it=>state[it.id]);
+  const allComplete = SECTIONS.every(s=>s.norm.every(it=>state[it.id]));
+
+  /* 全エリア完成なら花火にまとめるので、単独の紙吹雪は出さない */
+  updateGlobals(true);
+  if(justCompleted && !allComplete) celebrateArea(sec);
+}
+
+function updateSection(sec){
+  const ref = layerRefs[sec.id];
+  const done = sec.norm.filter(it=>state[it.id]).length;
+  sec.norm.forEach(it=>{
+    const row = ref.rows[it.id];
+    const on = !!state[it.id];
+    row.classList.toggle('done', on);
+    row.setAttribute('aria-checked', String(on));
+  });
+  ref.count.textContent = done+'/'+sec.norm.length;
+  ref.fill.style.width = Math.round(done/sec.norm.length*100)+'%';
+  ref.layer.classList.toggle('done', done===sec.norm.length);
+}
+
+function updateGlobals(animateConfetti){
+  const done = countDone();
+  const pct = TOTAL ? Math.round(done/TOTAL*100) : 0;
+  const completedLands = SECTIONS.filter(sec=>sec.norm.every(it=>state[it.id])).length;
+  const startedLands = SECTIONS.filter(sec=>sec.norm.some(it=>state[it.id])).length;
+  const castle = SECTIONS.find(sec=>sec.id==='E');
+  const castleP = castle.norm.filter(it=>state[it.id]).length / castle.norm.length;
+
+  els.statPercent.textContent = pct+'%';
+  els.statPop.textContent = (done*340).toLocaleString('ja-JP')+'人';
+  els.statCount.textContent = completedLands+' / '+SECTIONS.length;
+  els.progressInner.style.width = pct+'%';
+  els.progressOuter.setAttribute('aria-valuenow', String(pct));
+  els.banner.textContent = bannerText({
+    done, started: startedLands, completed: completedLands,
+    sections: SECTIONS.length, castleP,
+  });
+  els.parkStage.innerHTML = parkSVG();
+
+  if(completedLands === SECTIONS.length){
+    if(animateConfetti && prevCompleted !== SECTIONS.length) celebrateGrandOpen();
+  }else{
+    stopFireworks();   // チェックを外して未完成に戻したら花火も畳む
+  }
+  prevPct = pct;
+  prevCompleted = completedLands;
+}
+
+function renderAll(animateConfetti){
+  SECTIONS.forEach(updateSection);
+  updateGlobals(animateConfetti);
+  refreshOpenHeights();
+}
+
+/* ============ 演出 ============
+   canvas-confetti / fireworks-js が読み込めていれば使い、
+   オフラインなどで読み込めなければ CSS だけの紙吹雪にそのまま切り替わる。
+   ライブラリの有無は「使う瞬間」に見るので、読み込みの遅延や失敗があっても壊れない。 */
+const PARTY_COLORS = ['#d1495b','#e8b23d','#4a7ba6','#5b7a4a','#c15a8a'];
+
+function reducedMotion(){
+  return window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+}
+
+/* fireworks-js の UMD は window.Fireworks に名前空間を作り、
+   その中の Fireworks / default がクラス本体。将来の形の違いも吸収しておく */
+function resolveFireworks(){
+  const g = window.Fireworks;
+  if(!g) return null;
+  if(typeof g === 'function') return g;
+  if(typeof g.Fireworks === 'function') return g.Fireworks;
+  if(typeof g.default === 'function') return g.default;
+  return null;
+}
+
+/* CSS だけで動く従来の紙吹雪。ライブラリが無いときの受け皿 */
+function burstConfetti(count, colors){
+  if(reducedMotion()) return;
+  const palette = colors && colors.length ? colors : PARTY_COLORS;
+  for(let i=0;i<(count||70);i++){
+    const el = document.createElement('div');
+    el.className='confetti-piece';
+    el.style.left = Math.random()*100+'vw';
+    el.style.background = palette[Math.floor(Math.random()*palette.length)];
+    el.style.animationDuration = (2.5+Math.random()*1.5)+'s';
+    document.body.appendChild(el);
+    setTimeout(()=>el.remove(), 4200);
+  }
+}
+
+/* 完成したエリアの位置（画面上の割合）。紙吹雪をその区画から噴き上げる */
+function landOrigin(sec){
+  const fallback = {x:0.5, y:0.6};
+  try{
+    const box = els.parkStage.getBoundingClientRect();
+    if(!box.width || !box.height) return fallback;
+    const pos = (sec.id === 'E') ? CASTLE : POSITIONS[sec.id];
+    if(!pos) return fallback;
+    const clamp = v => Math.min(0.95, Math.max(0.05, v));
+    return {
+      x: clamp((box.left + box.width  * (pos[0]/640)) / window.innerWidth),
+      y: clamp((box.top  + box.height * (pos[1]/400)) / window.innerHeight),
+    };
+  }catch(e){ return fallback; }
+}
+
+/* エリアがひとつ完成したとき */
+function celebrateArea(sec){
+  if(reducedMotion()) return;
+  const colors = [sec.color, lighten(sec.color,0.3), sec.dark, '#e8b23d', '#fffaf0'];
+  if(typeof window.confetti === 'function'){
+    try{
+      const origin = landOrigin(sec);
+      window.confetti({
+        particleCount:70, spread:70, startVelocity:38, scalar:.9,
+        origin, colors, disableForReducedMotion:true,
+      });
+      window.confetti({
+        particleCount:30, spread:100, startVelocity:26, scalar:.7, decay:.92,
+        origin, colors, disableForReducedMotion:true,
+      });
+      return;
+    }catch(e){ /* ライブラリ側で失敗したら下の代替へ */ }
+  }
+  burstConfetti(36, colors);
+}
+
+/* 全エリア完成のとき */
+let fireworksHandle = null;
+function celebrateGrandOpen(){
+  if(reducedMotion()) return;
+  const Ctor = resolveFireworks();
+  if(Ctor && !fireworksHandle){
+    try{
+      const layer = document.createElement('div');
+      layer.className = 'fx-fireworks';
+      document.body.appendChild(layer);
+      const fw = new Ctor(layer, {
+        intensity:26, explosion:6, traceLength:3, flickering:40,
+        friction:.97, gravity:1.4, opacity:.5,
+        hue:{min:0,max:345}, sound:{enabled:false},
+      });
+      fw.start();
+      fireworksHandle = {fw, layer};
+      setTimeout(stopFireworks, 12000);
+      if(typeof window.confetti === 'function'){
+        try{ window.confetti({particleCount:140, spread:120, startVelocity:45, origin:{y:.65}, colors:PARTY_COLORS, disableForReducedMotion:true}); }catch(e){}
+      }
+      return;
+    }catch(e){ stopFireworks(); /* 代替へ */ }
+  }
+  if(!fireworksHandle) burstConfetti(90, PARTY_COLORS);
+}
+
+function stopFireworks(){
+  if(!fireworksHandle) return;
+  const {fw, layer} = fireworksHandle;
+  fireworksHandle = null;
+  try{ fw.stop(); }catch(e){ /* すでに停止していても気にしない */ }
+  layer.remove();
+}
+
+document.getElementById('resetBtn').onclick = ()=>{
+  if(confirm('パークの建設記録をすべてリセットしますか？')){
+    stopFireworks();
+    state = {};
+    saveState();
+    renderAll(false);
+  }
+};
+
+buildStrata();
+renderAll(false);
+setOpen('A', true);
+loadState().then(()=>{ renderAll(false); });
+</script>
+</body>
+</html>
